@@ -5,10 +5,26 @@
     <title>Title</title>
     <script src="plugins/jquery-1.12.4.js"></script>
 </head>
-<body>
 <vedio id="remoteVideo"></vedio>
-<vedio id="localVideo" muted="muted"></vedio>
+<vedio id="localVideo"></vedio>
+<audio id="ringtone" loop src="sounds/ringtone.wav" autoplay="autoplay"></audio>            <!--//来电提示音-->
+<audio id="ringbacktone" loop src="sounds/ringbacktone.wav" autoplay="autoplay"></audio>    <!--//电话呼叫后声音-->
+
+<input type="text" id="agent" placeholder="请输入工号" value="1009">
+<button id="registerSip">注册</button>
+<button id="quitSip">登出</button>
+<input type="text" id="status" value="当前状态：离线" readonly="readonly">
+<br>
+<input type="tel" id="telNumber" placeholder="请输入电话号码" value="18166334683">
+<button id="startCall">拨打</button>
+<button id="endingCall">挂断</button>
+<br>
+<button id="audioPlay">play</button>
+<button id="audioPause">pause</button>
 <script src="sipjs/sip-0.15.10.js"></script>
+<!--<script src="plugins/jquery-1.12.4.js"></script>-->
+<!--<script src="sipjs/sip-0.13.8.js"></script>-->
 <script src="js/demo1.js"></script>
+
 </body>
 </html>

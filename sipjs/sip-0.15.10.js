@@ -155,6 +155,8 @@ exports.ClientContext = ClientContext_1.ClientContext;
 var Constants_1 = __webpack_require__(80);
 exports.C = Constants_1.C;
 var Enums_1 = __webpack_require__(82);
+var Dialogs_1 = __webpack_require__(16);
+exports.Dialog = Dialogs_1.Dialog;
 exports.DialogStatus = Enums_1.DialogStatus;
 exports.SessionStatus = Enums_1.SessionStatus;
 exports.TypeStrings = Enums_1.TypeStrings;
@@ -13391,6 +13393,7 @@ var tslib_1 = __webpack_require__(1);
 var ClientContext_1 = __webpack_require__(79);
 var Constants_1 = __webpack_require__(80);
 var core_1 = __webpack_require__(2);
+var Dialogs_1 = __webpack_require__(16);
 var Enums_1 = __webpack_require__(82);
 var Exceptions_1 = __webpack_require__(84);
 var ServerContext_1 = __webpack_require__(87);
@@ -14287,6 +14290,7 @@ var events_1 = __webpack_require__(31);
 var ClientContext_1 = __webpack_require__(79);
 var Constants_1 = __webpack_require__(80);
 var core_1 = __webpack_require__(2);
+var Dialogs_1 = __webpack_require__(16);
 var Enums_1 = __webpack_require__(82);
 var Exceptions_1 = __webpack_require__(84);
 var ReferContext_1 = __webpack_require__(86);
@@ -14383,6 +14387,58 @@ var Session = /** @class */ (function (_super) {
             sendDTMF();
         }
         return this;
+    };
+    Session.prototype.createDialog = function (message, type, early) {
+        if (early === void 0) { early = false; }
+        var localTag = message[(type === "UAS") ? "toTag" : "fromTag"];
+        var remoteTag = message[(type === "UAS") ? "fromTag" : "toTag"];
+        var id = message.callId + localTag + remoteTag;
+        if (early) { // Early Dialog
+            if (this.earlyDialogs[id]) {
+                return true;
+            }
+            else {
+                var earlyDialog = new Dialogs_1.Dialog(this, message, type, Dialogs_1.Dialog.C.STATUS_EARLY);
+                // Dialog has been successfully created.
+                if (earlyDialog.error) {
+                    this.logger.error(earlyDialog.error);
+                    this.failed(message, Constants_1.C.causes.INTERNAL_ERROR);
+                    return false;
+                }
+                else {
+                    this.earlyDialogs[id] = earlyDialog;
+                    return true;
+                }
+            }
+        }
+        else { // Confirmed Dialog
+            // In case the dialog is in _early_ state, update it
+            var earlyDialog = this.earlyDialogs[id];
+            if (earlyDialog) {
+                earlyDialog.update(message, type);
+                this.dialog = earlyDialog;
+                delete this.earlyDialogs[id];
+                for (var idx in this.earlyDialogs) {
+                    if (this.earlyDialogs.hasOwnProperty(idx)) {
+                        this.earlyDialogs[idx].terminate();
+                        delete this.earlyDialogs[idx];
+                    }
+                }
+                return true;
+            }
+            // Otherwise, create a _confirmed_ dialog
+            var dialog = new Dialogs_1.Dialog(this, message, type);
+            if (dialog.error) {
+                this.logger.error(dialog.error);
+                this.failed(message, Constants_1.C.causes.INTERNAL_ERROR);
+                return false;
+            }
+            else {
+                this.toTag = message.toTag;
+                this.dialog = dialog;
+                return true;
+            }
+        }
     };
     Session.prototype.bye = function (options) {
         if (options === void 0) { options = {}; }
@@ -16668,6 +16724,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 var tslib_1 = __webpack_require__(1);
 var events_1 = __webpack_require__(31);
 var Constants_1 = __webpack_require__(80);
+var Dialogs_1 = __webpack_require__(16);
 var core_1 = __webpack_require__(2);
 var allowed_methods_1 = __webpack_require__(59);
 var Enums_1 = __webpack_require__(82);
